@@ -14,6 +14,7 @@ class Article {
    */
   static async createArticle(req, res) {
     const {
+<<<<<<< HEAD
       title, body, taglist
     } = req.body;
     if (!title) {
@@ -72,6 +73,49 @@ class Article {
     } catch (err) {
       return res.status(400).json({ message: err.errors[0].message });
     }
+=======
+      title, body, taglist, authorid
+    } = req.body;
+    if (!req.body.title) {
+      return res.status(400).json({ error: 'title can not be null' });
+    } if (!req.body.body) {
+      return res.status(400).json({ error: 'body can not be null' });
+    }
+    try {
+      const slugInstance = new Slug(req.body.title);
+      const descriptData = req.body.description || `${req.body.body.substring(0, 100)}...`;
+      const slug = slugInstance.returnSlug(title);
+      const newArticle = {
+        title, body, description: descriptData, slug, authorid, taglist
+      };
+      const article = await ArticleModel.createArticle(newArticle);
+      return res.status(201).json({ article });
+    } catch (error) { return res.status(400).json({ message: error.errors[0].message }); }
+>>>>>>> Feature(article): Delete article
+  }
+
+  /**
+   *@author: Innocent Nkunzi
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Article
+   */
+  static async deleteArticle(req, res) {
+    const slug = req.params;
+    try {
+      const findArticle = await ArticleModel.findSlug(slug);
+      if (findArticle.length === 0) {
+        res.status(404).json({ error: 'No article found with the provided slug' });
+      } else {
+        const articleId = findArticle[0].id;
+        const deleteArticle = await ArticleModel.deleteArticle(articleId);
+        if (deleteArticle.length !== 0) {
+          res.status(200).json({
+            message: 'Article deleted'
+          });
+        }
+      }
+    } catch (error) { return res.status(400).json({ message: error.errors[0].message }); }
   }
 }
 export default Article;

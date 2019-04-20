@@ -116,7 +116,6 @@ describe('Test the title', () => {
       title: faker.lorem.sentences(),
       body: faker.lorem.paragraphs(),
       description: faker.lorem.paragraph(),
-      authorid: 100
     };
     chai.request(index).post('/api/articles').send(longTitleArticle).set('x-access-token', `${userToken}`)
       .then((res) => {
@@ -132,7 +131,6 @@ describe('Test description', () => {
   const newArticle = {
     title: faker.lorem.sentence(),
     body: faker.lorem.paragraphs(),
-    authorid: 100
   };
   it('should provide a description if not provided', (done) => {
     chai.request(index).post('/api/articles').send(newArticle).then((res) => {
@@ -141,7 +139,7 @@ describe('Test description', () => {
       res.body.article.should.have.property('description');
       done();
     })
-      .catch(error => error);
+      .catch(error => logError(error));
   });
 });
 describe('Test all articles', () => {
@@ -150,9 +148,7 @@ describe('Test all articles', () => {
       res.should.have.status(200);
       res.body.should.be.a('object');
     })
-      .catch((err) => {
-        console.log(err);
-      });
+      .catch(error => logError(error));
   });
   it('should return an error message if there is no article', async () => {
     await articleModel.destroy({ truncate: true, cascade: true });
@@ -160,8 +156,6 @@ describe('Test all articles', () => {
       res.should.have.status(404);
       res.body.should.have.property('error').eql('Not article found for now');
     })
-      .catch((err) => {
-        console.log(err);
-      });
+      .catch(error => logError(error));
   });
 });
