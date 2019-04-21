@@ -19,6 +19,17 @@ const ArticleModel = (sequelize, DataTypes) => {
   }, {});
   sequelizeTrasform(Article);
   Article.createArticle = article => Article.create(article);
+  Article.getOneArticle = (authorid, slug) => Article.findOne({ where: { slug, authorid } });
+  Article.updateFoundArticle = (id, data) => {
+    Article.update({
+      title: data.title,
+      body: data.body,
+      slug: data.slug,
+      taglist: data.taglist,
+      authorid: data.authorid
+    }, { where: { id } });
+    return data;
+  };
 
   Article.associate = (models) => {
     Article.belongsTo(models.user, {

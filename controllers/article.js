@@ -1,5 +1,6 @@
 import models from '../models';
 import Slug from '../helpers/slug';
+import Description from '../helpers/makeDescription';
 
 const { article: ArticleModel } = models;
 /**
@@ -13,23 +14,63 @@ class Article {
    * @returns {Object} Article
    */
   static async createArticle(req, res) {
-    if (!req.body.title) {
+    const {
+      title, body, taglist, description
+    } = req.body;
+    if (!title) {
       return res.status(400).json({ error: 'title can not be null' });
+    } if (!body) {
+      return res.status(400).json({ error: 'body can not be null' });
     }
+    const authorid = req.user.id;
     const slugInstance = new Slug(req.body.title);
-    const descriptData = req.body.description || `${req.body.body.substring(0, 100)}...`;
-    try {
-      const {
-        title, body, taglist
-      } = req.body;
-      const slug = slugInstance.returnSlug(title);
-      const authorid = 100;
-      const newArticle = {
-        title, body, description: descriptData, slug, authorid, taglist
+    const descripIns = new Description(description, body);
+    const descriptData = descripIns.makeDescription();
+    const slug = slugInstance.returnSlug(title);
+    const newArticle = {
+      title, body, description: descriptData, slug, authorid, taglist
+    };
+    const article = await ArticleModel.createArticle(newArticle);
+    return res.status(201).json({ article });
+  }
+
+  /**
+   *@author: Innocent Nkunzi
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} updted Article
+   */
+  static async updateArticle(req, res) {
+    const { slug } = req.params;
+    const {
+      title, body, taglist, description
+    } = req.body;
+    if (!title) {
+      return res.status(400).json({ error: 'title can not be null' });
+    } if (!body) {
+      return res.status(400).json({ error: 'body can not be null' });
+    }
+    const authorid = req.user.id;
+    const searchArticle = await ArticleModel.getOneArticle(authorid, slug);
+    if (!searchArticle) {
+      res.status(404).json({
+        error: 'No article found for you to edit'
+      });
+    } else {
+      const { id } = searchArticle;
+      const slugInstance = new Slug(title);
+      const descripInstance = new Description(description, body);
+      const descriptData = descripInstance.makeDescription();
+      const newSlug = slugInstance.returnSlug();
+      const updatedArticle = {
+        title, body, description: descriptData, slug: newSlug, authorid, taglist
       };
-      const article = await ArticleModel.createArticle(newArticle);
-      return res.status(201).json({ article });
-    } catch (error) { return res.status(400).json({ message: error.errors[0].message }); }
+      const updateArticle = await ArticleModel.updateFoundArticle(id, updatedArticle);
+      res.status(200).json({
+        message: 'Article updated',
+        article: updateArticle
+      });
+    }
   }
 }
 export default Article;
