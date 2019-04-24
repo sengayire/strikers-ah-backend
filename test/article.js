@@ -23,36 +23,39 @@ before('Cleaning the database first', async () => {
   await userModel.destroy({ where: { email: userModel.email }, truncate: true, cascade: true });
 });
 const user = {
-  id: 100,
   username: 'nkunziinnocent',
   email: 'nkunzi@gmail.com',
   password: '@Nkunzi1234',
 };
+let userToken;
 describe('Create a user to be used in in creating article', () => {
   it('should create a user', (done) => {
-    chai.request(index).post('/api/auth/signup').send(user).then((res) => {
-      res.should.have.status(200);
-      res.body.user.should.be.a('object');
-      res.body.user.should.have.property('username');
-      done();
-    })
+    chai.request(index).post('/api/auth/signup').set('x-access-token', `${userToken}`).send(user)
+      .then((res) => {
+        res.should.have.status(200);
+        res.body.user.should.be.a('object');
+        res.body.user.should.have.property('username');
+        userToken = res.body.user.token;
+        done();
+      })
       .catch(error => logError(error));
   }).timeout(15000);
 });
 describe('Create an article', () => {
   it('should create an article', (done) => {
-    chai.request(index).post('/api/articles').send(fakeData).then((res) => {
-      res.should.have.status(201);
-      res.body.should.have.property('article');
-      res.body.article.should.be.a('object');
-      res.body.article.should.have.property('id');
-      res.body.article.should.have.property('slug');
-      res.body.article.should.have.property('title');
-      res.body.article.should.have.property('description');
-      res.body.article.should.have.property('createdAt');
-      res.body.article.should.have.property('updatedAt');
-      done();
-    })
+    chai.request(index).post('/api/articles').set('x-access-token', `${userToken}`).send(fakeData)
+      .then((res) => {
+        res.should.have.status(201);
+        res.body.should.have.property('article');
+        res.body.article.should.be.a('object');
+        res.body.article.should.have.property('id');
+        res.body.article.should.have.property('slug');
+        res.body.article.should.have.property('title');
+        res.body.article.should.have.property('description');
+        res.body.article.should.have.property('createdAt');
+        res.body.article.should.have.property('updatedAt');
+        done();
+      })
       .catch(error => logError(error));
   }).timeout(15000);
 });
@@ -62,14 +65,14 @@ describe('It checks title errors', () => {
       title: '',
       description: faker.lorem.paragraph(),
       body: faker.lorem.paragraphs(),
-      authorid: 100
     };
-    chai.request(index).post('/api/articles').send(newArticle).then((res) => {
-      res.should.have.status(400);
-      res.body.should.be.a('object');
-      res.body.should.have.property('error').eql('title can not be null');
-      done();
-    })
+    chai.request(index).post('/api/articles').set('x-access-token', `${userToken}`).send(newArticle)
+      .then((res) => {
+        res.should.have.status(400);
+        res.body.should.be.a('object');
+        res.body.should.have.property('error').eql('title can not be null');
+        done();
+      })
       .catch(error => logError(error));
   });
 });
@@ -79,28 +82,28 @@ describe('Test the body', () => {
       title: faker.random.words(),
       description: faker.lorem.paragraph(),
       body: '',
-      authorid: 100
     };
-    chai.request(index).post('/api/articles').send(newArticle).then((res) => {
-      res.should.have.status(400);
-      res.body.should.be.a('object');
-      //   res.body.should.have.property('error').eql('The body can\'t be empty');
-      done();
-    })
+    chai.request(index).post('/api/articles').set('x-access-token', `${userToken}`).send(newArticle)
+      .then((res) => {
+        res.should.have.status(400);
+        res.body.should.be.a('object');
+        res.body.should.have.property('error').eql('body can not be null');
+        done();
+      })
       .catch(error => logError(error));
   });
   it('should return an error if the body is not predefined', (done) => {
     const longTitleArticle = {
       title: faker.lorem.sentence(),
       description: faker.lorem.paragraph(),
-      authorid: 100
     };
-    chai.request(index).post('/api/articles').send(longTitleArticle).then((res) => {
-      res.should.have.status(400);
-      res.body.should.be.a('object');
-      res.body.should.have.property('error').eql('body can not be null');
-      done();
-    })
+    chai.request(index).post('/api/articles').set('x-access-token', `${userToken}`).send(longTitleArticle)
+      .then((res) => {
+        res.should.have.status(400);
+        res.body.should.be.a('object');
+        res.body.should.have.property('error').eql('body can not be null');
+        done();
+      })
       .catch(error => logError(error));
   });
 });
@@ -110,14 +113,14 @@ describe('Test the title', () => {
       title: faker.lorem.sentences(),
       body: faker.lorem.paragraphs(),
       description: faker.lorem.paragraph(),
-      authorid: 100
     };
-    chai.request(index).post('/api/articles').send(longTitleArticle).then((res) => {
-      res.should.have.status(201);
-      res.body.should.be.a('object');
-      res.body.should.have.property('article');
-      done();
-    })
+    chai.request(index).post('/api/articles').set('x-access-token', `${userToken}`).send(longTitleArticle)
+      .then((res) => {
+        res.should.have.status(201);
+        res.body.should.be.a('object');
+        res.body.should.have.property('article');
+        done();
+      })
       .catch(error => logError(error));
   });
 });
@@ -125,34 +128,33 @@ describe('Test description', () => {
   const newArticle = {
     title: faker.lorem.sentence(),
     body: faker.lorem.paragraphs(),
-    authorid: 100
   };
   it('should provide a description if not provided', (done) => {
-    chai.request(index).post('/api/articles').send(newArticle).then((res) => {
-      res.should.have.status(201);
-      res.body.should.have.property('article');
-      res.body.article.should.have.property('description');
-      done();
-    })
+    chai.request(index).post('/api/articles').set('x-access-token', `${userToken}`).send(newArticle)
+      .then((res) => {
+        res.should.have.status(201);
+        res.body.should.have.property('article');
+        res.body.article.should.have.property('description');
+        done();
+      })
       .catch(error => logError(error));
   });
 });
-
+let newSlug;
 describe('Tests for get article', () => {
-  let newSlug;
   const newArticle = {
     title: 'hello world',
     description: faker.lorem.paragraph(),
     body: faker.lorem.paragraphs(),
-    authorid: 100
   };
   it('should create an article to be used in get', (done) => {
-    chai.request(index).post('/api/articles/').send(newArticle).then((res) => {
-      res.should.have.status(201);
-      res.body.should.have.property('article');
-      newSlug = res.body.article.slug;
-      done();
-    })
+    chai.request(index).post('/api/articles/').set('x-access-token', `${userToken}`).send(newArticle)
+      .then((res) => {
+        res.should.have.status(201);
+        res.body.should.have.property('article');
+        newSlug = res.body.article.slug;
+        done();
+      })
       .catch(error => logError(error));
   });
   it('should return an article created', (done) => {
@@ -185,6 +187,26 @@ describe('reset password with an existing email', () => {
         result.should.have.status(202);
         done();
       })
+      .catch(error => logError(error));
+  });
+});
+describe('Bookmark tests', () => {
+  it('should bookmark an article', (done) => {
+    chai.request(index).post(`/api/articles/${newSlug}/bookmark`).set('x-access-token', `${userToken}`).then((res) => {
+      // console.log(res);
+      res.should.have.status(201);
+      res.body.should.be.a('object');
+      done();
+    })
+      .catch(error => logError(error));
+  });
+  it('should not bookmark an article for the second time', (done) => {
+    chai.request(index).post(`/api/articles/${newSlug}/bookmark`).set('x-access-token', `${userToken}`).then((res) => {
+      // console.log(res);
+      res.should.have.status(403);
+      res.body.should.be.a('object');
+      done();
+    })
       .catch(error => logError(error));
   });
 });

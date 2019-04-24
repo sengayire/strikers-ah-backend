@@ -50,6 +50,11 @@ const UserModel = (Sequelize, DataTypes) => {
       foreignKey: 'authorid', onDelete: 'CASCADE'
     });
   };
+  User.associate = (models) => {
+    User.hasMany(models.bookmark, {
+      foreignKey: 'userid', onDelete: 'CASCADE'
+    });
+  };
   User.checkEmail = async email => User.findOne({ where: { email } });
   User.resetpassword = async (password, id) => User.update({ password }, { where: { id } });
   return User;
