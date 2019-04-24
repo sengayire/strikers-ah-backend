@@ -21,17 +21,15 @@ class Article {
     } if (!body) {
       return res.status(400).json({ error: 'body can not be null' });
     }
-    try {
-      const authorid = req.user.id;
-      const slugInstance = new Slug(req.body.title);
-      const descriptData = req.body.description || `${req.body.body.substring(0, 100)}...`;
-      const slug = slugInstance.returnSlug(title);
-      const newArticle = {
-        title, body, description: descriptData, slug, authorid, taglist
-      };
-      const article = await ArticleModel.createArticle(newArticle);
-      return res.status(201).json({ article });
-    } catch (error) { return res.status(400).json({ message: error.errors[0].message }); }
+    const authorid = req.user.id;
+    const slugInstance = new Slug(req.body.title);
+    const descriptData = req.body.description || `${req.body.body.substring(0, 100)}...`;
+    const slug = slugInstance.returnSlug(title);
+    const newArticle = {
+      title, body, description: descriptData, slug, authorid, taglist
+    };
+    const article = await ArticleModel.createArticle(newArticle);
+    return res.status(201).json({ article });
   }
 
   /**
@@ -42,19 +40,28 @@ class Article {
  * @returns {object} it returns an object of articles
  */
   static async getAllArticles(req, res) {
-    try {
-      const getAll = await ArticleModel.getAll();
-      if (getAll.length === 0) {
-        res.status(404).json({
-          error: 'Not article found for now'
-        });
-      } else {
-        res.status(200).json({
-          article: getAll
-        });
-      }
-    } catch (err) {
-      return res.status(400).json({ message: err.errors[0].message });
+    const pageNumber = parseInt(req.query.page, 10);
+    const limit = parseInt(req.query.limit, 10);
+    if (pageNumber <= 0) {
+      return res.status(403).json({
+        error: 'Invalid page number'
+      });
+    } if (limit <= 0) {
+      return res.status(403).json({
+        error: 'Invalid page limit'
+      });
+    }
+    const offset = limit * (pageNumber - 1);
+    const getAll = await ArticleModel.getAll(limit, offset);
+    if (getAll.length) {
+      res.status(200).json({
+        article: getAll,
+        articlesCount: getAll.length
+      });
+    } else {
+      res.status(404).json({
+        error: 'No article found for now'
+      });
     }
   }
 }
