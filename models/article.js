@@ -22,7 +22,8 @@ const ArticleModel = (sequelize, DataTypes) => {
   Article.getAll = article => Article.findAll(article);
   Article.getOneArticle = slug => Article.findOne({ where: { slug } });
   Article.findSlug = slug => Article.findAll({ where: slug });
-  Article.deleteArticle = slug => Article.destroy({ where: { id: slug } });
+  Article.findArticleSlug = (authorid, slug) => Article.findOne({ where: { authorid, slug } });
+  Article.deleteArticle = id => Article.destroy({ where: { id } });
 
   Article.associate = (models) => {
     Article.belongsTo(models.user, {
