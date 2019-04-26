@@ -51,7 +51,9 @@ describe('Create an article', () => {
       res.body.article.should.have.property('updatedAt');
       done();
     })
-      .catch(err => err);
+      .catch((err) => {
+        console.log(err);
+      });
   }).timeout(15000);
 });
 describe('It checks title errors', () => {
