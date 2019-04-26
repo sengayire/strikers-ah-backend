@@ -17,8 +17,10 @@ const ArticleModel = (sequelize, DataTypes) => {
     description: { type: DataTypes.TEXT, trim: true },
     authorid: { type: DataTypes.INTEGER, allowNull: false }
   }, {});
+
   sequelizeTrasform(Article);
   Article.createArticle = article => Article.create(article);
+  Article.verifyArticle = id => Article.findOne({ where: { id } });
 
   Article.associate = (models) => {
     Article.belongsTo(models.user, {

@@ -60,6 +60,7 @@ describe('It checks title errors', () => {
       title: '',
       description: faker.lorem.paragraph(),
       body: faker.lorem.paragraphs(),
+      authorid: 100
     };
     chai.request(index).post('/api/articles').send(newArticle).then((res) => {
       res.should.have.status(400);
@@ -75,7 +76,8 @@ describe('Test the body', () => {
     const newArticle = {
       title: faker.random.words(),
       description: faker.lorem.paragraph(),
-      body: ''
+      body: '',
+      authorid: 100
     };
     chai.request(index).post('/api/articles').send(newArticle).then((res) => {
       res.should.have.status(400);
@@ -89,11 +91,12 @@ describe('Test the body', () => {
     const longTitleArticle = {
       title: faker.lorem.sentences(),
       description: faker.lorem.paragraph(),
+      authorid: 100
     };
     chai.request(index).post('/api/articles').send(longTitleArticle).then((res) => {
       res.should.have.status(400);
       res.body.should.be.a('object');
-      res.body.should.have.property('message').eql('article.body cannot be null');
+      res.body.should.have.property('error').eql('body can not be null');
       done();
     })
       .catch(err => err);
@@ -102,9 +105,10 @@ describe('Test the body', () => {
 describe('Test the title', () => {
   it('should substring a long title to only 40 characters', (done) => {
     const longTitleArticle = {
-      title: faker.lorem.sentence(),
+      title: faker.lorem.sentences(),
       body: faker.lorem.paragraphs(),
       description: faker.lorem.paragraph(),
+      authorid: 100
     };
     chai.request(index).post('/api/articles').send(longTitleArticle).then((res) => {
       res.should.have.status(201);
