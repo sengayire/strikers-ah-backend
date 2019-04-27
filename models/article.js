@@ -20,7 +20,7 @@ const ArticleModel = (sequelize, DataTypes) => {
 
   sequelizeTrasform(Article);
   Article.createArticle = article => Article.create(article);
-  Article.verifyArticle = id => Article.findOne({ where: { id } });
+  Article.verifyArticle = slug => Article.findOne({ where: { slug } });
 
   Article.associate = (models) => {
     Article.belongsTo(models.user, {

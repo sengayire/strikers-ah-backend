@@ -87,7 +87,7 @@ describe('Create an article', () => {
 
 describe('Rate an article', () => {
   it('should not enter an invalid rating', (done) => {
-    chai.request(index).post('/api/articles/er/Terrible').then((res) => {
+    chai.request(index).post('/api/articles/er/rate/Terrible').then((res) => {
       res.should.have.status(400);
       res.body.should.be.a('object');
       res.body.should.have.property('status').equal(400);
@@ -99,7 +99,7 @@ describe('Rate an article', () => {
 
   it('Should not enter an invalid article id', (done) => {
     chai.request(index)
-      .post('/api/articles/4/Terribl')
+      .post('/api/articles/4/rate/Terribl')
       .then((res) => {
         res.should.have.status(400);
         res.body.should.be.a('object');
@@ -112,10 +112,10 @@ describe('Rate an article', () => {
 
   it('Should verify if article exists', (done) => {
     chai.request(index)
-      .post('/api/articles/2043/Terrible')
+      .post('/api/articles/2043/rate/Terrible')
       .then((res) => {
         res.body.should.be.a('object');
-        res.body.should.have.property('status').equal(400);
+        res.body.should.have.property('status').equal(404);
         res.body.should.have.property('error').equal('Article can not be found.');
         done();
       })
@@ -125,7 +125,7 @@ describe('Rate an article', () => {
 
   it('Create a new rate for an article', (done) => {
     chai.request(index)
-      .post(`/api/articles/${newArticle}/Terrible`)
+      .post(`/api/articles/${newArticle}/rate/Terrible`)
       .then((res) => {
         res.body.should.be.a('object');
         res.body.should.have.property('status').equal(201);
@@ -144,7 +144,7 @@ describe('Rate an article', () => {
 
   it('update a rate of an article', (done) => {
     chai.request(index)
-      .post(`/api/articles/${newArticle}/Good`)
+      .post(`/api/articles/${newArticle}/rate/Good`)
       .then((res) => {
         res.body.should.be.a('object');
         res.body.should.have.property('status').equal(201);
@@ -163,7 +163,7 @@ describe('Rate an article', () => {
 
   it('update a rate of an article', (done) => {
     chai.request(index)
-      .post(`/api/articles/${newArticle}/Good`)
+      .post(`/api/articles/${newArticle}/rate/Good`)
       .then((res) => {
         res.body.should.be.a('object');
         res.body.should.have.property('status').equal(403);

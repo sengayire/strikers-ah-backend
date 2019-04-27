@@ -11,8 +11,8 @@ module.exports = {
       type: Sequelize.INTEGER,
       allowNull: false
     },
-    articleId: {
-      type: Sequelize.INTEGER,
+    articleSlug: {
+      type: Sequelize.STRING,
       allowNull: false
     },
     rating: {

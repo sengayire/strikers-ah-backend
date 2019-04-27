@@ -42,7 +42,7 @@ class Article {
    * @returns {Object} Rate
    */
   static async rateArticle(req, res) {
-    const { rate, articleId } = req.params;
+    const { rate, slug } = req.params;
     const rating = enumRate[`${rate}`];
     const userId = 2;
     if (typeof (rating) === 'undefined') {
@@ -52,21 +52,22 @@ class Article {
       });
     }
 
-    if (!Number(articleId)) {
+    if (Number(slug)) {
       return res.status(400).send({
         status: 400,
-        error: 'Id of the article is not a number'
+        error: 'slug of an article can not be a number.'
       });
     }
-    const results = await ArticleModel.verifyArticle(articleId);
+
+    const results = await ArticleModel.verifyArticle(slug);
     if (!results) {
-      return res.status(400).send({
-        status: 400,
+      return res.status(404).send({
+        status: 404,
         error: 'Article can not be found.'
       });
     }
 
-    const rateChecking = await ratingModel.rateCheck(rating, articleId, userId);
+    const rateChecking = await ratingModel.rateCheck(rating, slug, userId);
     const [dataResult, returnValue] = rateChecking;
 
     if (returnValue) {
@@ -76,7 +77,7 @@ class Article {
       });
     }
 
-    if (!rateChecking[1] && rateChecking[0].dataValues.rating !== rating) {
+    if (!returnValue && dataResult.dataValues.rating !== rating) {
       const updateRate = await ratingModel.rateUpdate(rateChecking[0].dataValues.id, rating);
       return res.status(201).send({
         status: 201,
@@ -85,7 +86,7 @@ class Article {
     }
     return res.status(403).send({
       status: 403,
-      error: 'Article is only rated once.'
+      error: 'Article can only be rated once.'
     });
   }
 }

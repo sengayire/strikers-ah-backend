@@ -5,8 +5,8 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-    articleId: {
-      type: DataTypes.INTEGER,
+    articleSlug: {
+      type: DataTypes.STRING,
       allowNull: false
     },
     rating: {
@@ -16,12 +16,12 @@ module.exports = (sequelize, DataTypes) => {
 
   }, {});
 
-  rating.rateCheck = (rate, article, id) => rating.findOrCreate({ where: { userId: id, articleId: article }, defaults: { rating: rate } });
+  rating.rateCheck = (rate, article, id) => rating.findOrCreate({ where: { userId: id, articleSlug: article }, defaults: { rating: rate } });
   rating.rateUpdate = (rateId, rate) => rating.update({ rating: rate }, { returning: true, where: { id: rateId } });
   rating.avgFind = id => rating.findAll({ where: { articleId: id }, attributes: ['articleId', [sequelize.fn('AVG', sequelize.col('rating')), 'avgRating']], group: 'rating.articleId' });
   rating.associate = (models) => {
     rating.belongsTo(models.user, { foreignKey: 'userId', onDelete: 'CASCADE' });
-    rating.belongsTo(models.article, { foreignKey: 'articleId', onDelete: 'CASCADE' });
+    rating.belongsTo(models.article, { foreignKey: 'articleSlug', onDelete: 'CASCADE' });
   };
 
   return rating;
