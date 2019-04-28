@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
 
   }, {});
 
-  rating.rateCheck = (rate, article, id) => rating.findOrCreate({ where: { userId: id, articleSlug: article }, defaults: { rating: rate } });
+  rating.addRate = (rate, article, id) => rating.findOrCreate({ where: { userId: id, articleSlug: article }, defaults: { rating: rate } });
   rating.rateUpdate = (rateId, rate) => rating.update({ rating: rate }, { returning: true, where: { id: rateId } });
   rating.avgFind = id => rating.findAll({ where: { articleId: id }, attributes: ['articleId', [sequelize.fn('AVG', sequelize.col('rating')), 'avgRating']], group: 'rating.articleId' });
   rating.associate = (models) => {

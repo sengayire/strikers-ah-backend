@@ -1,8 +1,9 @@
 import models from '../models';
 import Slug from '../helpers/slug';
 import enumRate from '../helpers/enumeration';
+import objKey from '../helpers/enumKeyFinder';
 
-const { article: ArticleModel, rating: ratingModel } = models;
+const { article: ArticleModel, rating: ratingModel, user: userModel } = models;
 /**
  * @description  CRUD for article Class
  */
@@ -44,7 +45,17 @@ class Article {
   static async rateArticle(req, res) {
     const { rate, slug } = req.params;
     const rating = enumRate[`${rate}`];
-    const userId = 2;
+    const userId = req.user;
+
+    const user = await userModel.verifyUser(userId);
+    if (!user) {
+      return res.status(404).send({
+        status: 404,
+        error: 'User not found'
+      });
+    }
+    const { id, username } = user.dataValues;
+
     if (typeof (rating) === 'undefined') {
       return res.status(400).send({
         status: 400,
@@ -66,22 +77,47 @@ class Article {
         error: 'Article can not be found.'
       });
     }
+    const { title: articleTitle } = results.dataValues;
 
-    const rateChecking = await ratingModel.rateCheck(rating, slug, userId);
+    const rateChecking = await ratingModel.addRate(rating, slug, userId);
     const [dataResult, returnValue] = rateChecking;
 
     if (returnValue) {
       return res.status(201).send({
-        status: 201,
-        message: dataResult.dataValues
+        rated_article: {
+          status: 201,
+          id: dataResult.dataValues.id,
+          user: {
+            id,
+            username
+          },
+          article: {
+            title: articleTitle,
+            slug: dataResult.dataValues.articleSlug
+          },
+          rating: rate
+        }
       });
     }
 
     if (!returnValue && dataResult.dataValues.rating !== rating) {
       const updateRate = await ratingModel.rateUpdate(rateChecking[0].dataValues.id, rating);
-      return res.status(201).send({
-        status: 201,
-        message: updateRate[1][0].dataValues
+      const { userId: userid } = updateRate[1][0].dataValues;
+      return res.status(200).send({
+        rated_article: {
+          status: 200,
+          id: updateRate[1][0].dataValues.id,
+          user: {
+            id: userid,
+            username
+          },
+          article: {
+            title: articleTitle,
+            slug: updateRate[1][0].dataValues.articleSlug
+          },
+          rating: rate,
+          previousRating: objKey(dataResult.dataValues.rating)
+        }
       });
     }
     return res.status(403).send({

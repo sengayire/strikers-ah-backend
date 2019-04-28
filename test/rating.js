@@ -9,14 +9,6 @@ const articleModel = db.article;
 const userModel = db.user;
 const ratingModel = db.rating;
 
-const enumRate = {
-  Terrible: 1,
-  Bad: 2,
-  Okay: 3,
-  Good: 4,
-  Great: 5
-};
-Object.freeze(enumRate);
 
 chai.should();
 chai.use(chaiHttp);
@@ -38,10 +30,12 @@ const user = {
   password: '@Cletw1234',
 };
 
-let newArticle;
+let userToken;
+let articleSlug;
 describe('Create a user for rating an article', () => {
   it('should create a user', (done) => {
     chai.request(index).post('/api/auth/signup').send(user).then((res) => {
+      userToken = res.body.user.token;
       res.should.have.status(200);
       res.body.should.be.a('object');
       res.body.user.should.be.a('object');
@@ -64,42 +58,48 @@ const fakeData = {
 };
 describe('Create an article', () => {
   it('should create an article 2', (done) => {
-    chai.request(index).post('/api/articles').send(fakeData).then((res) => {
-      newArticle = res.body.article.id;
-      res.should.have.status(201);
-      res.body.should.have.property('article');
-      res.body.should.be.a('object');
-      res.body.article.should.be.a('object');
-      res.body.article.should.have.property('id');
-      res.body.article.should.have.property('slug');
-      res.body.article.should.have.property('title').equal(fakeData.title);
-      res.body.article.should.have.property('description');
-      res.body.article.should.have.property('body').equal(fakeData.body);
-      res.body.article.should.have.property('authorid').equal(3);
-      res.body.article.should.have.property('taglist');
-      res.body.article.should.have.property('createdAt');
-      res.body.article.should.have.property('updatedAt');
-      done();
-    })
+    chai.request(index).post('/api/articles')
+      .set('Authorization', userToken)
+      .send(fakeData)
+      .then((res) => {
+        articleSlug = res.body.article.slug;
+        res.should.have.status(201);
+        res.body.should.have.property('article');
+        res.body.should.be.a('object');
+        res.body.article.should.be.a('object');
+        res.body.article.should.have.property('id');
+        res.body.article.should.have.property('slug');
+        res.body.article.should.have.property('title').equal(fakeData.title);
+        res.body.article.should.have.property('description');
+        res.body.article.should.have.property('body').equal(fakeData.body);
+        res.body.article.should.have.property('authorid').equal(3);
+        res.body.article.should.have.property('taglist');
+        res.body.article.should.have.property('createdAt');
+        res.body.article.should.have.property('updatedAt');
+        done();
+      })
       .catch(err => err);
   });
 });
 
 describe('Rate an article', () => {
-  it('should not enter an invalid rating', (done) => {
-    chai.request(index).post('/api/articles/er/rate/Terrible').then((res) => {
-      res.should.have.status(400);
-      res.body.should.be.a('object');
-      res.body.should.have.property('status').equal(400);
-      res.body.should.have.property('error').equal('Id of the article is not a number');
-      done();
-    })
+  it('should not enter an invalid slug', (done) => {
+    chai.request(index).post('/api/articles/23/rate/Terrible')
+      .set('Authorization', userToken)
+      .then((res) => {
+        res.should.have.status(400);
+        res.body.should.be.a('object');
+        res.body.should.have.property('status').equal(400);
+        res.body.should.have.property('error').equal('slug of an article can not be a number.');
+        done();
+      })
       .catch(err => err);
   });
 
-  it('Should not enter an invalid article id', (done) => {
+  it('Should not enter an invalid article rating', (done) => {
     chai.request(index)
-      .post('/api/articles/4/rate/Terribl')
+      .post(`/api/articles/${articleSlug}/rate/Terribl`)
+      .set('Authorization', userToken)
       .then((res) => {
         res.should.have.status(400);
         res.body.should.be.a('object');
@@ -112,7 +112,8 @@ describe('Rate an article', () => {
 
   it('Should verify if article exists', (done) => {
     chai.request(index)
-      .post('/api/articles/2043/rate/Terrible')
+      .post('/api/articles/slug12!/rate/Terrible')
+      .set('Authorization', userToken)
       .then((res) => {
         res.body.should.be.a('object');
         res.body.should.have.property('status').equal(404);
@@ -123,51 +124,59 @@ describe('Rate an article', () => {
   });
 
 
-  it('Create a new rate for an article', (done) => {
+  it('Should create a new rate for an article', (done) => {
     chai.request(index)
-      .post(`/api/articles/${newArticle}/rate/Terrible`)
+      .post(`/api/articles/${articleSlug}/rate/Terrible`)
+      .set('Authorization', userToken)
       .then((res) => {
         res.body.should.be.a('object');
-        res.body.should.have.property('status').equal(201);
-        res.body.message.should.be.a('object');
-        res.body.should.have.property('message');
-        res.body.message.should.have.property('id');
-        res.body.message.should.have.property('rating').equal(enumRate.Terrible);
-        res.body.message.should.have.property('articleId').equal(newArticle);
-        res.body.message.should.have.property('userId'); //    test exact user from token
-        res.body.message.should.have.property('updatedAt');
-        res.body.message.should.have.property('createdAt');
+        res.body.should.have.property('rated_article');
+        res.body.rated_article.should.be.a('object');
+        res.body.rated_article.should.have.property('status').equal(201);
+        res.body.rated_article.should.have.property('id');
+        res.body.rated_article.should.have.property('user');
+        res.body.rated_article.user.should.have.property('id').equal(3);
+        res.body.rated_article.user.should.have.property('username').equal('mwunguzi');
+        res.body.rated_article.should.have.property('article');
+        res.body.rated_article.article.should.have.property('title').equal(fakeData.title);
+        res.body.rated_article.article.should.have.property('slug').equal(articleSlug);
+        res.body.rated_article.should.have.property('rating').equal('Terrible');
         done();
       })
       .catch(err => err);
   });
 
-  it('update a rate of an article', (done) => {
+  it('Should update a rating for an article', (done) => {
     chai.request(index)
-      .post(`/api/articles/${newArticle}/rate/Good`)
+      .post(`/api/articles/${articleSlug}/rate/Good`)
+      .set('Authorization', userToken)
       .then((res) => {
         res.body.should.be.a('object');
-        res.body.should.have.property('status').equal(201);
-        res.body.message.should.be.a('object');
-        res.body.should.have.property('message');
-        res.body.message.should.have.property('id');
-        res.body.message.should.have.property('rating').equal(enumRate.Good);
-        res.body.message.should.have.property('articleId').equal(newArticle);
-        res.body.message.should.have.property('userId'); //    test exact user from token
-        res.body.message.should.have.property('updatedAt');
-        res.body.message.should.have.property('createdAt');
+        res.body.should.have.property('rated_article');
+        res.body.rated_article.should.be.a('object');
+        res.body.rated_article.should.have.property('status').equal(200);
+        res.body.rated_article.should.have.property('id');
+        res.body.rated_article.should.have.property('user');
+        res.body.rated_article.user.should.have.property('id').equal(3);
+        res.body.rated_article.user.should.have.property('username').equal('mwunguzi');
+        res.body.rated_article.should.have.property('article');
+        res.body.rated_article.article.should.have.property('title').equal(fakeData.title);
+        res.body.rated_article.article.should.have.property('slug').equal(articleSlug);
+        res.body.rated_article.should.have.property('rating').equal('Good');
+        res.body.rated_article.should.have.property('previousRating').equal('Terrible');
         done();
       })
       .catch(err => err);
   });
 
-  it('update a rate of an article', (done) => {
+  it('Should not rate an article more than once with the same rating', (done) => {
     chai.request(index)
-      .post(`/api/articles/${newArticle}/rate/Good`)
+      .post(`/api/articles/${articleSlug}/rate/Good`)
+      .set('Authorization', userToken)
       .then((res) => {
         res.body.should.be.a('object');
         res.body.should.have.property('status').equal(403);
-        res.body.should.have.property('error').equal('Article is only rated once.');
+        res.body.should.have.property('error').equal('Article can only be rated once.');
         done();
       })
       .catch(err => err);
