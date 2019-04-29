@@ -21,7 +21,7 @@ class Article {
     } if (!body) {
       return res.status(400).json({ error: 'body can not be null' });
     }
-    const authorid = req.user.id;
+    const authorid = req.user;
     const slugInstance = new Slug(req.body.title);
     const descriptData = req.body.description || `${req.body.body.substring(0, 100)}...`;
     const slug = slugInstance.returnSlug(title);
@@ -40,6 +40,26 @@ class Article {
  * @returns {object} it returns an object of articles
  */
   static async getAllArticles(req, res) {
+    const getAll = await ArticleModel.getAll();
+    if (getAll.length === 0) {
+      res.status(404).json({
+        error: 'Not article found for now'
+      });
+    } else {
+      res.status(200).json({
+        article: getAll
+      });
+    }
+  }
+
+  /**
+ *
+ * @author Innocent Nkunzi
+ * @param {*} req
+ * @param {*} res
+ * @returns {object} it returns an object of articles
+ */
+  static async articlePagination(req, res) {
     const pageNumber = parseInt(req.query.page, 10);
     const limit = parseInt(req.query.limit, 10);
     if (pageNumber <= 0) {

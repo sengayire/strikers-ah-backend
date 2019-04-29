@@ -141,6 +141,16 @@ describe('Test description', () => {
   });
 });
 describe('Pagination tests', () => {
+  it('should create an article to be used in pagination test', (done) => {
+    chai.request(index).post('/api/articles').send(fakeData).set('x-access-token', `${userToken}`)
+      .then((res) => {
+        res.should.have.status(201);
+        res.body.should.have.property('article');
+        res.body.article.should.be.a('object');
+        done();
+      })
+      .catch(error => logError(error));
+  });
   it('should select apecified article on a given page', (done) => {
     chai.request(index).get('/api/articles?page=1&limit=1').then((res) => {
       res.should.have.status(200);
@@ -159,8 +169,18 @@ describe('Pagination tests', () => {
   });
 });
 describe('Test all articles', () => {
+  it('should create an article', (done) => {
+    chai.request(index).post('/api/articles').send(fakeData).set('x-access-token', `${userToken}`)
+      .then((res) => {
+        res.should.have.status(201);
+        res.body.should.have.property('article');
+        res.body.article.should.be.a('object');
+        done();
+      })
+      .catch(error => logError(error));
+  });
   it('should return all the articles', () => {
-    chai.request(index).get('/api/articles').then((res) => {
+    chai.request(index).get('/api/articles/all').then((res) => {
       res.should.have.status(200);
       res.body.should.be.a('object');
     })
@@ -168,7 +188,7 @@ describe('Test all articles', () => {
   });
   it('should return an error message if there is no article', async () => {
     await articleModel.destroy({ truncate: true, cascade: true });
-    chai.request(index).get('/api/articles').then((res) => {
+    chai.request(index).get('/api/articles/all').then((res) => {
       res.should.have.status(404);
       res.body.should.have.property('error').eql('Not article found for now');
     })

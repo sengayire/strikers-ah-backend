@@ -10,7 +10,7 @@ function ErrorHander(cb) {
     try {
       await cb(req, res, nex);
     } catch (err) {
-      return res.status(400).json({ message: err.errors[0].message });
+      return res.status(400).json({ message: err });
     }
   };
 }
