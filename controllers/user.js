@@ -12,6 +12,11 @@ const {
   user: UserModel,
   userverification: UserVerificationModel, resetpassword: resetPassword
 } = model;
+import blacklist from '../helpers/redis';
+import { sendAccountVerification as mailingHelper } from '../helpers/mailing';
+
+const { Op } = Sequelize;
+dotenv.config();
 
 const {
   Op
@@ -89,6 +94,38 @@ class User {
   }
 
   /**
+   * @author: Clet Mwunguzi
+   * @param {Object} req -- request object
+   * @param {Object} res  -- response object
+   * @returns { Middleware } -- returns nothing
+   */
+  static async logout(req, res) {
+    const token = req.headers['x-access-token'] || req.headers.authorization;
+    const blacklisting = await blacklist(token);
+    if (blacklisting) {
+      return res.status(200).send({
+        status: 200,
+        message: 'Successfully logged out'
+      });
+    }
+    return res.status(500).send({
+      status: 500,
+      error: 'Something went wrong'
+    });
+  }
+
+
+  /**
+   * @author: Clet Mwunguzi
+   * @param {Object} req -- request object
+   * @param {Object} res  -- response object
+   * @returns { Middleware } -- returns nothing
+   */
+  static welcomeUser(req, res) {
+    return res.status(200).send('Welcome');
+  }
+
+  /**
    * @author frank harerimana
    * @param {*} req user from social
    * @param {*} res logged
@@ -126,7 +163,7 @@ class User {
       res.status(404).json({ message: 'no account related to such email', email });
     } else {
       // generate token
-      const token = jwt.sign({ id: search.dataValues.id }, process.env.SECRETKEY);
+      const token = jwt.sign({ id: search.dataValues.id }, process.env.secretKey);
       // store token and userID
       await resetPassword.recordNewReset(`${token}`);
       // Generate link and send it in email
@@ -151,7 +188,7 @@ class User {
     const check = await resetPassword.checkToken(token);
     if (!check) { return res.status(400).json({ message: 'invalid token' }); }
     try {
-      const decode = jwt.verify(token, process.env.SECRETKEY);
+      const decode = jwt.verify(token, process.env.secretKey);
       const second = (new Date().getTime() - check.dataValues.createdAt.getTime()) / 1000;
       if (second > 600) { return res.status(400).json({ message: 'token has expired' }); }
       const { password } = req.body;

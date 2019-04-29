@@ -3,6 +3,7 @@ import passport from 'passport';
 import user from '../../controllers/user';
 import Strategy from '../../middlewares/auth';
 import helper from '../../helpers/helper';
+import secureRoute from '../../middlewares/tokenValidation';
 
 const router = express.Router();
 
@@ -29,6 +30,17 @@ router.get('/facebook/callback', passport.authenticate('facebook', {
   session: false,
   failureRedirect: '/auth/facebook'
 }), user.socialLogin);
+router.post('/login', user.loginWithEmail);
+router.post('/signup', user.signUpWithEmail);
+
+
+router.get('/google', passport.authenticate('google', { session: false, scope: ['email', 'profile'] }));
+router.get('/google/callback', passport.authenticate('google', { failureRedirect: 'auth/google' }), user.socialLogin);
+router.get('/logout', secureRoute, user.logout);
+router.get('/welcome', secureRoute, user.welcomeUser);
+
+router.get('/facebook', passport.authenticate('facebook', { scope: ['email'] }));
+router.get('/facebook/callback', passport.authenticate('facebook', { session: false, failureRedirect: '/auth/facebook' }), user.socialLogin);
 
 router.get('/twitter', passport.authenticate('twitter'));
 router.get('/twitter/callback', passport.authenticate('twitter', {
