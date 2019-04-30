@@ -11,6 +11,7 @@ router.post('/report/category', AuthToken, articleController.AddReportingCategor
 router.get('/report/category', AuthToken, articleController.reportingCategories);
 router.put('/report/category/:id', AuthToken, articleController.editReportingCategory);
 router.delete('/report/category/:id', AuthToken, articleController.deleteReportingCategory);
+router.post('/:slug/report/', AuthToken, articleController.reportingArticle);
 router.get('/:slug', errorHandler(articleController.getArticle));
 
 router.delete('/:slug');
