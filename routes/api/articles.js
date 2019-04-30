@@ -8,6 +8,7 @@ const router = express.Router();
 router.get('/', articleController.getAllArticles);
 router.post('/', AuthToken, errorHandler(articleController.createArticle));
 router.post('/report/category', AuthToken, articleController.AddReportingCategory);
+router.get('/report/category', AuthToken, articleController.reportingCategories);
 router.get('/:slug', errorHandler(articleController.getArticle));
 
 router.delete('/:slug');
