@@ -89,7 +89,7 @@ describe('Test the body', () => {
       .then((res) => {
         res.should.have.status(400);
         res.body.should.be.a('object');
-        res.body.should.have.property('error').eql('The body can\'t be empty');
+        res.body.should.have.property('error').eql('body can not be null');
         done();
       })
       .catch(error => logError(error));
@@ -135,12 +135,13 @@ describe('Test description', () => {
     authorid: 100
   };
   it('should provide a description if not provided', (done) => {
-    chai.request(index).post('/api/articles').send(newArticle).then((res) => {
-      res.should.have.status(201);
-      res.body.should.have.property('article');
-      res.body.article.should.have.property('description');
-      done();
-    })
+    chai.request(index).post('/api/articles').send(newArticle).set('x-access-token', `${userToken}`)
+      .then((res) => {
+        res.should.have.status(201);
+        res.body.should.have.property('article');
+        res.body.article.should.have.property('description');
+        done();
+      })
       .catch(error => error);
   });
 });
