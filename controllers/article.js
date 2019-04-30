@@ -1,7 +1,7 @@
 import models from '../models';
 import Slug from '../helpers/slug';
 
-const { article: ArticleModel } = models;
+const { article: ArticleModel, reportingcategory: articleReportingCategory } = models;
 /**
  * @description  CRUD for article Class
  */
@@ -71,6 +71,30 @@ class Article {
       }
     } catch (err) {
       return res.status(400).json({ message: err.errors[0].message });
+    }
+  }
+
+  /**
+   *@author: Jacques Nyilinkindi
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Add reporting category
+   */
+  static async AddReportingCategory(req, res) {
+    const { category } = req.body;
+    if (!category) {
+      return res.status(400).json({ message: 'Provide category name' });
+    }
+    try {
+      const [categoryInfo, created] = await articleReportingCategory.findOrCreate({
+        where: { name: category }
+      });
+      if (created) {
+        return res.status(201).json({ category: categoryInfo });
+      }
+      return res.status(409).json({ message: 'Category already exists' });
+    } catch (error) {
+      return res.status(500).json({ error });
     }
   }
 }
