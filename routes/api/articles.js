@@ -9,7 +9,8 @@ router.get('/', articleController.getAllArticles);
 router.post('/', AuthToken, errorHandler(articleController.createArticle));
 router.post('/report/category', AuthToken, articleController.AddReportingCategory);
 router.get('/report/category', AuthToken, articleController.reportingCategories);
-router.put('/report/category/:id', AuthToken, articleController.editReportingCategories);
+router.put('/report/category/:id', AuthToken, articleController.editReportingCategory);
+router.delete('/report/category/:id', AuthToken, articleController.deleteReportingCategory);
 router.get('/:slug', errorHandler(articleController.getArticle));
 
 router.delete('/:slug');
