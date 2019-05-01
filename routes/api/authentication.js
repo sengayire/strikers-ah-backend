@@ -4,6 +4,8 @@ import user from '../../controllers/user';
 import Strategy from '../../middlewares/auth';
 import secureRoute from '../../helpers/tokenValidation';
 import helper from '../../helpers/helper';
+import secureRoute from '../../middlewares/tokenValidation';
+
 
 const router = express.Router();
 
